@@ -1,62 +1,79 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-int main(int argc, char * argv[]) {
+int main() {
+    int *a = malloc(10 * sizeof(int));  // Указатель на динамический массив для хранения чисел
+    int n = 0;      // Количество введенных чисел
+    int cap = 10;   // Текущая емкость массива (максимальное количество элементов без перевыделения)
+    int x;          // Временная переменная для хранения очередного введенного числа
+    char c;         // Переменная для хранения символа после числа (пробел или '\n')
 
-	// Искомая последовательность - возрастающая последовательность 
-	// с максимальной суммой её элементов и максимальной длиной.
+    printf("Введите числа через пробел и нажмите Enter:\n");
 
-    int sum = 0; // Текущая сумма последовательности
-    int max_count = 0; // Длина искомой последовательности
-    int max_sum = 0; // Сумма искомой последовательности
-    int start_counter = 1; // Начало текущей последовательности
-    int stop_counter = 0; // Конец текущей последовательности
-    int current_length = 0; // Промежуточная длина текущей последовательности
-    int final_start = 1; // Начало искомой последовательности
-    int final_stop = 0; // Конец искомой последовательности
+    // Цикл чтения чисел: читаем число и следующий за ним символ
+    while (scanf("%d%c", &x, &c) == 2) {
+        // Если массив заполнен, увеличиваем его емкость в 2 раза
+        if (n >= cap) {
+            cap *= 2;
+            a = realloc(a, cap * sizeof(int));
+        }
+        a[n++] = x;     // Сохраняем число и увеличиваем счетчик
+        if (c == '\n') break;   // Если встретили Enter - завершаем ввод
+    }
 
-    printf("Введите массив: \n");
+    // Проверка: если ничего не введено
+    if (n == 0) {
+        printf("Массив пуст\n");
+        free(a);
+        return 0;
+    }
 
-    sum = argv[1][0] - '0'; // Первый элемент последовательности не учитывается в цикле
-    
-    for (int i = 2; i < argc; i++) { // Проход по последовательности
-    
-        if (argv[i - 1][0] > argv[i][0]) { // Проверка условия
-            stop_counter = i - 1;
-            current_length = stop_counter - start_counter;
-            
-            int temp_start = start_counter;
-            int temp_stop = stop_counter;
-            
-            if (sum > max_sum || (sum == max_sum && max_count < current_length)) { // Сравнение с текущими макс. элем. 
+    // Вывод введенного массива для наглядности
+    printf("\nВведено %d чисел: ", n);
+    for (int i = 0; i < n; i++) {
+        printf("%d ", a[i]);
+    }
+    printf("\n");
+
+    int sum = a[0];         // Сумма текущей возрастающей последовательности
+    int max_sum = a[0];     // Максимальная сумма среди всех найденных последовательностей
+    int max_len = 1;        // Длина последовательности с максимальной суммой
+    int start = 0;          // Индекс начала последовательности с максимальной суммой
+    int end = 0;            // Индекс конца последовательности с максимальной суммой
+    int curr_start = 0;     // Индекс начала текущей обрабатываемой последовательности
+
+    // Проход по массиву для поиска возрастающих последовательностей
+    for (int i = 1; i < n; i++) {
+        // Проверяем, продолжается ли возрастание
+        if (a[i] > a[i-1]) {
+            // Элемент больше предыдущего - продолжаем текущую последовательность
+            sum += a[i];
+            int len = i - curr_start + 1;   // Текущая длина последовательности
+
+            // Сравниваем с максимальной: если сумма больше, или сумма равна но длина больше
+            if (sum > max_sum || (sum == max_sum && len > max_len)) {
                 max_sum = sum;
-                max_count = current_length;
-                final_start = temp_start;
-                final_stop = temp_stop;
+                max_len = len;
+                start = curr_start;
+                end = i;
             }
-            
-            sum = argv[i][0] - '0';
-            start_counter = i; // Началась новая последовательность   
         } else {
-            sum += argv[i][0] - '0';
+            // Возрастание прервалось - начинаем новую последовательность
+            sum = a[i];
+            curr_start = i;
         }
     }
 
-    stop_counter = argc - 1;
-    current_length = stop_counter - start_counter;
-
-    // Тестовый вывод
-    
-    if (sum > max_sum || (sum == max_sum && max_count < current_length)) {
-        printf("%d \n", sum);
-        printf("%s \n", argv[start_counter]);
-        printf("%s \n", argv[stop_counter]);
-        printf("%d \n", current_length);
-    } else {
-        printf("%d \n", max_sum);
-        printf("%s \n", argv[final_start]);
-        printf("%s \n", argv[final_stop]);
-        printf("%d \n", max_count);
+    // Вывод результатов
+    printf("\nРезультат:\n");
+    printf("Сумма: %d\n", max_sum);
+    printf("Длина: %d\n", max_len);
+    printf("Последовательность: ");
+    for (int i = start; i <= end; i++) {
+        printf("%d ", a[i]);
     }
-    
+    printf("\n");
+
+    free(a);    // Освобождаем выделенную память
     return 0;
 }
